@@ -1,0 +1,99 @@
+object frmSequencial: TfrmSequencial
+  Left = 198
+  Height = 380
+  Top = 250
+  Width = 629
+  BorderStyle = bsSingle
+  Caption = 'Gus downloader !'
+  ClientHeight = 380
+  ClientWidth = 629
+  DesignTimePPI = 120
+  OnActivate = FormActivate
+  OnCreate = FormCreate
+  Position = poOwnerFormCenter
+  LCLVersion = '3.2.0.0'
+  object lblTop: TLabel
+    Left = 16
+    Height = 20
+    Top = 8
+    Width = 29
+    Caption = 'File:'
+  end
+  object lblDownloads: TLabel
+    Left = 16
+    Height = 20
+    Top = 46
+    Width = 41
+    Caption = '0 of 0'
+  end
+  object lblBytes: TLabel
+    Left = 16
+    Height = 20
+    Top = 121
+    Width = 57
+    Caption = 'lblBytes'
+  end
+  object pbDownloads: TProgressBar
+    Left = 16
+    Height = 25
+    Top = 76
+    Width = 597
+    Anchors = [akTop, akLeft, akRight]
+    TabOrder = 0
+  end
+  object pbBytes: TProgressBar
+    Left = 16
+    Height = 25
+    Top = 151
+    Width = 597
+    TabOrder = 1
+  end
+  object CheckBox1: TCheckBox
+    Left = 514
+    Height = 24
+    Top = 42
+    Width = 99
+    Anchors = [akTop, akRight]
+    Caption = 'Mirrorable'
+    TabOrder = 2
+    OnChange = CheckBox1Change
+  end
+  object ValueListEditor1: TValueListEditor
+    Left = 16
+    Height = 129
+    Top = 232
+    Width = 597
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    FixedCols = 0
+    RowCount = 2
+    TabOrder = 3
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goThumbTracking, goFixedColSizing]
+    TitleCaptions.Strings = (
+      'URL'
+      'Mirror URL '
+    )
+    ColWidths = (
+      80
+      517
+    )
+  end
+  object lblTop1: TLabel
+    Left = 16
+    Height = 20
+    Top = 200
+    Width = 92
+    Caption = 'Mirror table:'
+  end
+  object CheckBox2: TCheckBox
+    Left = 406
+    Height = 24
+    Top = 42
+    Width = 85
+    Anchors = [akTop, akRight]
+    Caption = 'Backable'
+    Checked = True
+    State = cbChecked
+    TabOrder = 4
+    OnChange = CheckBox1Change
+  end
+end
