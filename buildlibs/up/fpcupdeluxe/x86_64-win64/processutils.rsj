@@ -1,0 +1,15 @@
+{"version":1,"strings":[
+{"hash":244675747,"name":"processutils.lisexitcode","sourcebytes":[69,120,105,116,32,99,111,100,101,32,37,115],"value":"Exit code %s"},
+{"hash":206570997,"name":"processutils.listoolhasnoexecutable","sourcebytes":[116,111,111,108,32,34,37,115,34,32,104,97,115,32,110,111,32,101,120,101,99,117,116,97,98,108,101],"value":"tool \"%s\" has no executable"},
+{"hash":47089762,"name":"processutils.liscannotfindexecutable","sourcebytes":[99,97,110,110,111,116,32,102,105,110,100,32,101,120,101,99,117,116,97,98,108,101,32,34,37,115,34],"value":"cannot find executable \"%s\""},
+{"hash":165907842,"name":"processutils.lismissingexecutable","sourcebytes":[109,105,115,115,105,110,103,32,101,120,101,99,117,116,97,98,108,101,32,34,37,115,34],"value":"missing executable \"%s\""},
+{"hash":95101305,"name":"processutils.lisexecutableisadirectory","sourcebytes":[101,120,101,99,117,116,97,98,108,101,32,34,37,115,34,32,105,115,32,97,32,100,105,114,101,99,116,111,114,121],"value":"executable \"%s\" is a directory"},
+{"hash":260498062,"name":"processutils.lisexecutablelacksthepermissiontorun","sourcebytes":[101,120,101,99,117,116,97,98,108,101,32,34,37,115,34,32,108,97,99,107,115,32,116,104,101,32,112,101,114,109,105,115,115,105,111,110,32,116,111,32,114,117,110],"value":"executable \"%s\" lacks the permission to run"},
+{"hash":179936499,"name":"processutils.lissuccess","sourcebytes":[83,117,99,99,101,115,115],"value":"Success"},
+{"hash":127310580,"name":"processutils.lisaborted","sourcebytes":[65,98,111,114,116,101,100],"value":"Aborted"},
+{"hash":87662738,"name":"processutils.liscannotexecute","sourcebytes":[99,97,110,110,111,116,32,101,120,101,99,117,116,101,32,34,37,115,34],"value":"cannot execute \"%s\""},
+{"hash":54145314,"name":"processutils.lismissingdirectory","sourcebytes":[109,105,115,115,105,110,103,32,100,105,114,101,99,116,111,114,121,32,34,37,115,34],"value":"missing directory \"%s\""},
+{"hash":173417107,"name":"processutils.lisunabletoexecute","sourcebytes":[117,110,97,98,108,101,32,116,111,32,101,120,101,99,117,116,101,58,32,37,115],"value":"unable to execute: %s"},
+{"hash":40740755,"name":"processutils.lisunabletoreadprocessexitstatus","sourcebytes":[117,110,97,98,108,101,32,116,111,32,114,101,97,100,32,112,114,111,99,101,115,115,32,69,120,105,116,83,116,97,116,117,115],"value":"unable to read process ExitStatus"},
+{"hash":172791683,"name":"processutils.lisfreeingbufferlines","sourcebytes":[102,114,101,101,105,110,103,32,98,117,102,102,101,114,32,108,105,110,101,115,58,32,37,115],"value":"freeing buffer lines: %s"}
+]}
