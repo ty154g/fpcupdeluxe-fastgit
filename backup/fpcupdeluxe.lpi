@@ -1213,7 +1213,7 @@
       <UnitOutputDirectory Value="buildlibs\$NameOnly($(ProjFile))\$NameOnly($Project(InfoFile))\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>
-      <TargetCPU Value="x86_64"/>
+      <TargetCPU Value="powerpc64"/>
       <TargetOS Value="darwin"/>
       <Optimizations>
         <OptimizationLevel Value="2"/>

@@ -1,0 +1,2 @@
+.\sources\fpcuputil.pas文件中有FTPDownload函数、HTTPDownload函数
+wget和curl下载还待确定

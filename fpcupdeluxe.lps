@@ -4963,7 +4963,7 @@
         <UnitName Value="CarbonBars"/>
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="4"/>
+        <TopLine Value="3"/>
         <CursorPos X="2" Y="16"/>
         <UsageCount Value="10"/>
         <Loaded Value="True"/>
@@ -4972,7 +4972,7 @@
     <Debugger>
       <Backend Value="{A76EFAFB-3A42-421F-9672-C141897C94AA}"/>
     </Debugger>
-    <JumpHistory Count="8" HistoryIndex="7">
+    <JumpHistory Count="9" HistoryIndex="8">
       <Position1>
         <Filename Value="sources\updeluxe\fpcupdeluxemainform.pas"/>
         <Caret Line="4204" Column="46" TopLine="4194"/>
@@ -5004,6 +5004,10 @@
         <Filename Value="sources\updeluxe\fpcupdeluxemainform.pas"/>
         <Caret Line="4837" Column="24" TopLine="4827"/>
       </Position8>
+      <Position9>
+        <Filename Value="E:\Lazarus\lazarus\lcl\interfaces\carbon\carbonbars.pp"/>
+        <Caret Line="16" Column="2" TopLine="4"/>
+      </Position9>
     </JumpHistory>
     <RunParams>
       <FormatVersion Value="2"/>

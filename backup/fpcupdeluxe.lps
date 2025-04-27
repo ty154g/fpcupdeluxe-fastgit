@@ -5,7 +5,7 @@
     <Version Value="12"/>
     <ManyBuildModesSelection Value="win32,win64,linuxi386,linuxi386QT5,linuxi386QT5zip,linux64,linuxaarch64,linuxaarch64QT5,linuxaarch64QT5zip,linuxarm,linuxarmQT5,linuxarmQT5zip,linuxarmv6,linuxx64QT5,linuxx64QT5zip,linuxppc64,freebsdi386,freebsdx64,solarisx64,dragonflyx64,netbsdx64,netbsdi386,freebsdx64QT5,freebsdx64QT5zip"/>
     <BuildModes Active="Default"/>
-    <Units Count="663">
+    <Units Count="664">
       <Unit0>
         <Filename Value="up.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -21,7 +21,6 @@
         <ComponentName Value="Form1"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <IsVisibleTab Value="True"/>
         <TopLine Value="4827"/>
         <CursorPos X="24" Y="4837"/>
         <UsageCount Value="200"/>
@@ -4959,11 +4958,21 @@
         <CursorPos X="25" Y="48"/>
         <UsageCount Value="9"/>
       </Unit662>
+      <Unit663>
+        <Filename Value="E:\Lazarus\lazarus\lcl\interfaces\carbon\carbonbars.pp"/>
+        <UnitName Value="CarbonBars"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="4"/>
+        <CursorPos X="2" Y="16"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit663>
     </Units>
     <Debugger>
       <Backend Value="{A76EFAFB-3A42-421F-9672-C141897C94AA}"/>
     </Debugger>
-    <JumpHistory Count="7" HistoryIndex="6">
+    <JumpHistory Count="8" HistoryIndex="7">
       <Position1>
         <Filename Value="sources\updeluxe\fpcupdeluxemainform.pas"/>
         <Caret Line="4204" Column="46" TopLine="4194"/>
@@ -4991,6 +5000,10 @@
         <Filename Value="sources\updeluxe\fpcupdeluxemainform.pas"/>
         <Caret Line="278" Column="15" TopLine="268"/>
       </Position7>
+      <Position8>
+        <Filename Value="sources\updeluxe\fpcupdeluxemainform.pas"/>
+        <Caret Line="4837" Column="24" TopLine="4827"/>
+      </Position8>
     </JumpHistory>
     <RunParams>
       <FormatVersion Value="2"/>
