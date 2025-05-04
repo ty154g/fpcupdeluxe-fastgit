@@ -258,11 +258,11 @@ begin
   {$ENDIF}
   pbBytes.Position:= 0;
   CheckBox1.Checked:=False;
-  t := ExtractFilePath(FDownloads[AIndex].Filename);
+  t := ExtractFilePath(Application.Params[0]);
   r := t + 'tmp-bak' + t[Length(t)] + ExtractFileName(FDownloads[AIndex].Filename);
   if FileExists(r) then begin
     CopyFile(r, FDownloads[AIndex].Filename);
-	end else try
+  end else try
     s := FDownloads[AIndex].URL;
     //try
     //  {$IFDEF USEMORMOT}

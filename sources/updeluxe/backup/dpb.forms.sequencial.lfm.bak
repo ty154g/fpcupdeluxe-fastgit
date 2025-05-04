@@ -1,0 +1,98 @@
+object frmSequencial: TfrmSequencial
+  Left = 198
+  Height = 304
+  Top = 250
+  Width = 503
+  BorderStyle = bsSingle
+  Caption = 'Gus downloader !'
+  ClientHeight = 304
+  ClientWidth = 503
+  OnActivate = FormActivate
+  OnCreate = FormCreate
+  Position = poOwnerFormCenter
+  LCLVersion = '3.6.0.0'
+  object lblTop: TLabel
+    Left = 13
+    Height = 20
+    Top = 6
+    Width = 29
+    Caption = 'File:'
+  end
+  object lblDownloads: TLabel
+    Left = 13
+    Height = 20
+    Top = 37
+    Width = 41
+    Caption = '0 of 0'
+  end
+  object lblBytes: TLabel
+    Left = 13
+    Height = 20
+    Top = 97
+    Width = 57
+    Caption = 'lblBytes'
+  end
+  object pbDownloads: TProgressBar
+    Left = 13
+    Height = 20
+    Top = 61
+    Width = 603
+    Anchors = [akTop, akLeft, akRight]
+    TabOrder = 0
+  end
+  object pbBytes: TProgressBar
+    Left = 13
+    Height = 20
+    Top = 121
+    Width = 478
+    TabOrder = 1
+  end
+  object CheckBox1: TCheckBox
+    Left = 517
+    Height = 24
+    Top = 34
+    Width = 99
+    Anchors = [akTop, akRight]
+    Caption = 'Mirrorable'
+    TabOrder = 2
+    OnChange = CheckBox1Change
+  end
+  object ValueListEditor1: TValueListEditor
+    Left = 13
+    Height = 179
+    Top = 186
+    Width = 603
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    FixedCols = 0
+    RowCount = 2
+    TabOrder = 3
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goThumbTracking, goFixedColSizing]
+    TitleCaptions.Strings = (
+      'URL'
+      'Mirror URL '
+    )
+    ColWidths = (
+      64
+      539
+    )
+  end
+  object lblTop1: TLabel
+    Left = 13
+    Height = 20
+    Top = 160
+    Width = 92
+    Caption = 'Mirror table:'
+  end
+  object CheckBox2: TCheckBox
+    Left = 434
+    Height = 24
+    Top = 34
+    Width = 85
+    Anchors = [akTop, akRight]
+    Caption = 'Backable'
+    Checked = True
+    State = cbChecked
+    TabOrder = 4
+    OnChange = CheckBox1Change
+  end
+end

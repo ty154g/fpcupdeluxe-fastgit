@@ -50,7 +50,7 @@ constructor TAny_WasiP1Wasm32.Create;
 begin
   inherited Create;
   FTargetCPU:=TCPU.wasm32;
-  FTargetOS:=TOS.wasip1;
+  FTargetOS:=TOS.wasi;
   Reset;
   ShowInfo;
 end;

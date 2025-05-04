@@ -37,14 +37,13 @@ uses
 
 const
   DEFAULTFPCVERSION     = '3.2.2';
-  DEFAULTFPCVERSIONURL  = '3_2_2';
 
   FPCTRUNKVERSION       = '3.3.1';
   FPCTRUNKBOOTVERSION   = '3.2.2';
 
   LAZARUSTRUNKVERSION   = '4.99';
 
-  DEFAULTFREEBSDVERSION = 14;
+  DEFAULTFREEBSDVERSION = 12;
 
   LAZBUILDNAME          = 'lazbuild';
 
@@ -97,12 +96,6 @@ const
   //PACKAGESCONFIGDIR     = PACKAGESLOCATION+DirectorySeparator+'fpcpkgconfig';
 
   REVINCFILENAME        = 'revision.inc';
-
-  {$IFDEF WINDOWS}
-  BATCHEXT     ='.bat';
-  {$ELSE}
-  BATCHEXT     ='.sh';
-  {$ENDIF}
 
   {$IFDEF WINDOWS}
   PREBUILTBINUTILSURLWINCE = FPCTRUNKBINARIES+'/install/crossbinwce';
@@ -405,12 +398,13 @@ type
     procedure SetLazarusPrimaryConfigDirectory(value:string);
     procedure SetMakeDirectory(value:string);
     procedure SetCompiler(value:string);
+    function GetShell: string;
+    function GetMake: string;
     procedure SetVerbosity(aValue:boolean);
     procedure SetHTTPProxyHost(AValue: string);
     procedure SetHTTPProxyPassword(AValue: string);
     procedure SetHTTPProxyPort(AValue: integer);
     procedure SetHTTPProxyUser(AValue: string);
-    function GetMake: string;
     function DownloadFromBase(aClient:TRepoClient; aModuleName: string; var aBeforeRevision, aAfterRevision: string; UpdateWarnings: TStringList): boolean;
     // Get fpcup registred cross-compiler, if any, if not, return nil
     function GetCrossInstaller: TCrossInstaller;
@@ -422,7 +416,6 @@ type
     function IsHelpInstaller:boolean;
     function IsUniversalInstaller:boolean;
     {$IFDEF MSWINDOWS}
-    function GetShell: string;
     function GetStrayShell: boolean;
     {$ENDIF MSWINDOWS}
   protected
@@ -485,6 +478,7 @@ type
     FMUSL: boolean;
     FFPCUnicode: boolean;
     FMUSLLinker: string;
+    property Shell: string read GetShell;
     property Make: string read GetMake;
     procedure SetFPCInstallDirectory(value:string);virtual;
     // Check for existence of required executables; if not there, get them if possible
@@ -506,7 +500,6 @@ type
     // Clone/update using Git; use SourceDirectory as local repository
     // Any generated warnings will be added to UpdateWarnings
     {$IFDEF MSWINDOWS}
-    property Shell: string read GetShell;
     // Make a list (in FUtilFiles) of all binutils that can be downloaded
     procedure CreateBinutilsList({%H-}aVersion:string='');
     // Download make.exe, patch.exe etc into the make directory (only implemented for Windows):
@@ -518,7 +511,6 @@ type
     function DownloadWget: boolean;
     function DownloadFreetype: boolean;
     function DownloadZlib: boolean;
-    function DownloadMake: boolean;
     {$ENDIF}
     function DownloadJasmin: boolean;
     // Looks for SVN client in subdirectories and sets FSVNClient.SVNExecutable if found.
@@ -731,6 +723,7 @@ uses
   {$endif}
   process,
   FileUtil,
+  IniFiles,
   LazFileUtils
   {$IF NOT DEFINED(HAIKU) AND NOT DEFINED(AROS) AND NOT DEFINED(MORPHOS)}
   //,ssl_openssl
@@ -767,7 +760,7 @@ begin
     localOS:=GetTOS(GetSourceOS);
   end;
   if (localCPU in [TCPU.loongarch64,TCPU.xtensa,TCPU.wasm32]) then SetResult('3.3.1',result);
-  if (localOS in [TOS.freertos,TOS.wasip1]) then SetResult('3.3.1',result);
+  if (localOS in [TOS.freertos,TOS.wasi]) then SetResult('3.3.1',result);
   if (localOS in [TOS.aix]) then SetResult('3.0.0',result);
   if (localCPU=TCPU.aarch64) then
   begin
@@ -986,19 +979,14 @@ begin
   Result := FMake;
 end;
 
-{$IFDEF MSWINDOWS}
 function TInstaller.GetShell: string;
-var
-  output:string;
 begin
-  {$ifdef win32}
+  {$IFDEF MSWINDOWS}
+  {$IFDEF CPUX86}
   if FShell = '' then
   begin
     // disable for now .... not working 100%
-    (*
-
-    //FShell := 'C:/Windows/System32/cmd.exe';
-    //exit;
+    {
     // do we have a stray sh.exe in the path ...
     if StrayShell then
     begin
@@ -1012,16 +1000,14 @@ begin
         FShell := Trim(output);
       end;
     end;
-
-    *)
+    }
   end;
-  {$endif}
-  {$ifdef win64}
-  FShell := '';
-  {$endif}
+  {$ENDIF CPU32}
+  {$ENDIF MSWINDOWS}
   Result := FShell;
 end;
 
+{$IFDEF MSWINDOWS}
 function TInstaller.GetStrayShell: boolean;
 begin
   result:=false;
@@ -1096,7 +1082,7 @@ var
   s: string;
   aDir: string;
   {$ifdef MSWINDOWS}
-  aURL,aFile,aFilePath: string;
+  aURL,aFile: string;
   i:integer;
   {$endif}
   {$ifndef USEONLYCURL}
@@ -1252,6 +1238,7 @@ begin
     aFile:=MakePath + 'patch.exe';
     if (Not FileExists(aFile)) then
     begin
+      //aURL:=FPCGITLABBUILDBINARIES+'/-/raw/release_'+StringReplace(DEFAULTFPCVERSION,'.','_',[rfReplaceAll])+'/install/binw'+{$ifdef win64}'64'{$else}'32'{$endif}+'/';
       aURL:=FPCGITLABBUILDBINARIES+'/-/raw/main/install/binw32/';
       GetFile(aURL+'patch.exe',aFile);
       GetFile(aURL+'patch.exe.manifest',aFile + '.manifest');
@@ -1268,6 +1255,7 @@ begin
     aFile:=MakePath + 'pwd.exe';
     if (Not FileExists(aFile)) then
     begin
+      //aURL:=FPCGITLABBUILDBINARIES+'/-/raw/release_'+StringReplace(DEFAULTFPCVERSION,'.','_',[rfReplaceAll])+'/install/binw'+{$ifdef win64}'64'{$else}'32'{$endif}+'/';
       aURL:=FPCGITLABBUILDBINARIES+'/-/raw/main/install/binw'+{$ifdef win64}'64'{$else}'32'{$endif}+'/';
       GetFile(aURL+'pwd.exe',aFile);
     end;
@@ -1347,26 +1335,25 @@ begin
         //ForceDirectoriesSafe(MakePath+'unrar\bin');
         // this version of unrar does not need installation ... so we can silently get it !!
         s:='unrar-3.4.3-bin.zip';
-        aFilePath:=ConcatPaths([MakePath,'unrar',s]);
-        SysUtils.DeleteFile(aFilePath);
+        SysUtils.DeleteFile(MakePath+'unrar\'+s);
         aURL:=FPCUPGITREPO+'/releases/download/windowsi386bins_v1.0/';
-        OperationSucceeded:=GetFile(aURL+s,aFilePath);
+        OperationSucceeded:=GetFile(aURL+s,MakePath+'unrar\'+s);
         // sometimes, souceforge has a redirect error, returning a successfull download, but without the datafile itself
         if (FileSize(MakePath+'unrar\'+s)<50000) then
         begin
-          SysUtils.DeleteFile(aFilePath);
+          SysUtils.DeleteFile(MakePath+'unrar\'+s);
           OperationSucceeded:=false;
         end;
         if NOT OperationSucceeded then
         begin
           // try one more time
-          SysUtils.DeleteFile(aFilePath);
+          SysUtils.DeleteFile(MakePath+'unrar\'+s);
           aURL:='https://downloads.sourceforge.net/project/gnuwin32/unrar/3.4.3/';
-          OperationSucceeded:=GetFile(aURL+s,aFilePath);
+          OperationSucceeded:=GetFile(aURL+s,MakePath+'unrar\'+s);
           // sometimes, souceforge has a redirect error, returning a successfull download, but without the datafile itself
-          if (FileSize(aFilePath)<50000) then
+          if (FileSize(MakePath+'unrar\'+s)<50000) then
           begin
-            SysUtils.DeleteFile(aFilePath);
+            SysUtils.DeleteFile(MakePath+'unrar\'+s);
             OperationSucceeded:=false;
           end;
         end;
@@ -1375,7 +1362,7 @@ begin
           with TNormalUnzipper.Create do
           begin
             try
-              OperationSucceeded:=DoUnZip(aFilePath,ExtractFilePath(aFilePath),[]);
+              OperationSucceeded:=DoUnZip(MakePath+'unrar\'+s,MakePath+'unrar\',[]);
             finally
               Free;
             end;
@@ -1383,7 +1370,7 @@ begin
 
           if OperationSucceeded then
           begin
-            SysUtils.DeleteFile(aFilePath);
+            SysUtils.DeleteFile(MakePath+'unrar\'+s);
             OperationSucceeded:=FileExists(FUnrar);
           end;
         end;
@@ -1391,10 +1378,11 @@ begin
         OperationSucceeded:=True;
       end;
 
+
       with GitClient do
       begin
         OperationSucceeded:=False;
-        aFile:=ConcatPaths([MakePath,'git','cmd',RepoExecutableName+GetExeExt]);
+        aFile:=MakePath+'git'+DirectorySeparator+'cmd'+DirectorySeparator+RepoExecutableName+GetExeExt;
         // try to find systemwide GIT
         if (NOT ForceLocal) then
         begin
@@ -1441,14 +1429,12 @@ begin
             {$endif}
             Infoln(localinfotext+'GIT client not found. Downloading it',etInfo);
             Infoln(localinfotext+'GIT client download (may take time) from '+aURL,etDebug);
-
-            aFilePath:=ConcatPaths([MakePath,'git',s]);
-            OperationSucceeded:=GetFile(aURL,aFilePath);
+            OperationSucceeded:=GetFile(aURL,MakePath+'git\'+s);
             if NOT OperationSucceeded then
             begin
               // try one more time
-              SysUtils.DeleteFile(aFilePath);
-              OperationSucceeded:=GetFile(aURL,aFilePath);
+              SysUtils.DeleteFile(MakePath+'git\'+s);
+              OperationSucceeded:=GetFile(aURL,MakePath+'git\'+s);
             end;
             if OperationSucceeded then
             begin
@@ -1456,14 +1442,14 @@ begin
               with TNormalUnzipper.Create do
               begin
                 try
-                  OperationSucceeded:=DoUnZip(aFilePath,ExtractFilePath(aFilePath),[]);
+                  OperationSucceeded:=DoUnZip(MakePath+'git\'+s,MakePath+'git\',[]);
                 finally
                   Free;
                 end;
               end;
               if OperationSucceeded then
               begin
-                SysUtils.DeleteFile(aFilePath);
+                SysUtils.DeleteFile(MakePath+'git\'+s);
                 OperationSucceeded:=FileExists(aFile);
                 //Copy certificate ... might be necessary
                 //aURL:=MakePath+'git\mingw32\';
@@ -1483,7 +1469,7 @@ begin
       with HGClient do
       begin
         OperationSucceeded:=False;
-        aFile:=ConcatPaths([MakePath,'hg',RepoExecutableName+GetExeExt]);
+        aFile:=MakePath+'hg'+DirectorySeparator+RepoExecutableName+GetExeExt;
         // try to find systemwide HG
         if (NOT ForceLocal) then
         begin
@@ -1508,15 +1494,12 @@ begin
           ForceDirectoriesSafe(MakePath+'hg');
           Infoln(localinfotext+'HG (mercurial) client not found. Downloading it',etInfo);
           Infoln(localinfotext+'HG (mercurial) client download (may take time) from '+aURL,etDebug);
-
-          aFilePath:=ConcatPaths([MakePath,'hg',s]);
-
-          OperationSucceeded:=GetFile(aURL,aFilePath);
+          OperationSucceeded:=GetFile(aURL,MakePath+'hg\'+s);
           if NOT OperationSucceeded then
           begin
             // try one more time
-            SysUtils.DeleteFile(aFilePath);
-            OperationSucceeded:=GetFile(aURL,aFilePath);
+            SysUtils.DeleteFile(MakePath+'hg\'+s);
+            OperationSucceeded:=GetFile(aURL,MakePath+'hg\'+s);
           end;
           if OperationSucceeded then
           begin
@@ -1524,7 +1507,7 @@ begin
             with TNormalUnzipper.Create do
             begin
               try
-                OperationSucceeded:=DoUnZip(aFilePath,ExtractFilePath(aFilePath),[]);
+                OperationSucceeded:=DoUnZip(MakePath+'hg\'+s,MakePath+'hg\',[]);
               finally
                 Free;
               end;
@@ -1534,7 +1517,7 @@ begin
               OperationSucceeded:=FileExists(aFile);
             end;
           end;
-          SysUtils.DeleteFile(aFilePath);
+          SysUtils.DeleteFile(MakePath+'hg\'+s);
           if OperationSucceeded then RepoExecutable:=aFile else RepoExecutable:=RepoExecutableName+GetExeExt;
         end;
         if RepoExecutable <> EmptyStr then
@@ -1603,18 +1586,22 @@ begin
 
     if OperationSucceeded then
     begin
-      {$IFDEF MSWINDOWS}
+    {$IFDEF MSWINDOWS}
       // check if we have make ... otherwise get it from standard URL
       if (NOT FileExists(Make)) then
       begin
+        //aURL:=FPCGITLABBUILDBINARIES+'/-/raw/release_'+StringReplace(DEFAULTFPCVERSION,'.','_',[rfReplaceAll])+'/install/binw'+{$ifdef win64}'64'{$else}'32'{$endif}+'/';
+        //aURL:=FPCTRUNKBINARIES+'/install/binw'+{$ifdef win64}'64'{$else}'32'{$endif}+'/'+ExtractFileName(Make);
+        aURL:=FPCGITLABBUILDBINARIES+'/-/raw/main/install/binw'+{$ifdef win64}'64'{$else}'32'{$endif}+'/';
         Infoln(localinfotext+'Make binary not found. Getting it.',etInfo);
-        DownloadMake;
+        Infoln(localinfotext+'Make binary download from: '+aURL+'.',etDebug);
+        GetFile(aURL+ExtractFileName(Make),Make);
         OperationSucceeded:=FileExists(Make);
       end;
-      {$ELSE}
+    {$ELSE}
       OperationSucceeded := CheckExecutable(Make, ['-v'], '');
       if (NOT OperationSucceeded) then Infoln(localinfotext+Make+' not found.',etError);
-      {$ENDIF}
+    {$ENDIF}
     end;
 
     FNeededExecutablesChecked:=OperationSucceeded;
@@ -2312,10 +2299,10 @@ begin
   SetLength(FUtilFiles,0); //clean out any cruft
 
   //aSourceURL:=FPCTRUNKBINARIES+'/install/binw32/';
-  aSourceURL:=FPCGITLABBUILDBINARIES+'/-/raw/release_'+DEFAULTFPCVERSIONURL+'/install/binw32/';
+  aSourceURL:=FPCGITLABBUILDBINARIES+'/-/raw/release_'+StringReplace(DEFAULTFPCVERSION,'.','_',[rfReplaceAll])+'/install/binw32/';
   {$ifdef win64}
   //aSourceURL64:=FPCBINARIES+'/install/binw64/';
-  aSourceURL64:=FPCGITLABBUILDBINARIES+'/-/raw/release_'+DEFAULTFPCVERSIONURL+'/install/binw64/';
+  aSourceURL64:=FPCGITLABBUILDBINARIES+'/-/raw/release_'+StringReplace(DEFAULTFPCVERSION,'.','_',[rfReplaceAll])+'/install/binw64/';
   {$endif}
 
   // Common to both 32 and 64 bit windows (i.e. 32 bit files)
@@ -2941,93 +2928,6 @@ begin
   DeleteDirectoryEx(ZipDir+DirectorySeparator);
   Result:=true; //never fail
 end;
-
-function TInstaller.DownloadMake: boolean;
-const
-  {$ifdef win64}
-  NewSourceURL : array [0..2] of string = (
-      FPCUPGITREPO+'/releases/download/windows_'+NEWBINSTAG+'/Make_win64.zip',
-      FPCGITLABBUILDBINARIES+'/-/raw/release_'+DEFAULTFPCVERSIONURL+'/install/binw64/make.exe',
-      FPCGITLABBUILDBINARIES+'/-/raw/main/install/binw64/make.exe'
-    );
-  {$endif}
-  {$ifdef win32}
-  NewSourceURL : array [0..2] of string = (
-      FPCUPGITREPO+'/releases/download/windows_'+NEWBINSTAG+'/Make_win32.zip',
-      FPCGITLABBUILDBINARIES+'/-/raw/release_'+DEFAULTFPCVERSIONURL+'/install/binw32/make.exe',
-      FPCGITLABBUILDBINARIES+'/-/raw/main/install/binw32/make.exe'
-    );
-  {$endif}
-var
-  OperationSucceeded: boolean;
-  SourceMakeExe,TargetMakeExe:string;
-  SourceName,ZipDir:string;
-  i:integer;
-begin
-
-  OperationSucceeded := false;
-  Infoln(localinfotext+'Going to download custom latest fpcupdeluxe Make.',etInfo);
-  SourceName := GetTempFileNameExt('FPCUPTMP','zip');
-  for i:=0 to (Length(NewSourceURL)-1) do
-  begin
-    if (i=0) then SourceName := GetTempFileNameExt('FPCUPTMP','zip');
-    if (i=1) then SourceName := GetTempFileNameExt('FPCUPTMP','exe');
-    //always get this file with the native downloader !!
-    try
-      OperationSucceeded:=GetFile(NewSourceURL[i],SourceName,true,true);
-      if (NOT OperationSucceeded) then
-      begin
-        // try one more time
-        SysUtils.DeleteFile(SourceName);
-        OperationSucceeded:=GetFile(NewSourceURL[i],SourceName,true,true);
-      end;
-      if (NOT OperationSucceeded) then
-        SysUtils.DeleteFile(SourceName)
-      else
-        break;
-    except
-      on E: Exception do
-      begin
-        OperationSucceeded := false;
-        WritelnLog(etError, localinfotext + 'Exception ' + E.ClassName + '/' + E.Message + ' downloading Make', true);
-      end;
-    end;
-  end;
-
-  if OperationSucceeded then
-  begin
-    if (ExtractFileExt(SourceName)='.zip') then
-    begin
-      ZipDir:=GetTempDirName;
-      // Extract
-      with TNormalUnzipper.Create do
-      begin
-        try
-          OperationSucceeded:=DoUnZip(SourceName,ZipDir,[]);
-        finally
-          Free;
-        end;
-      end;
-    end;
-  end;
-
-  if OperationSucceeded then
-  begin
-    TargetMakeExe:=Make;
-    SourceMakeExe:=IncludeTrailingPathDelimiter(ZipDir)+ExtractFileName(TargetMakeExe);
-    //MoveFile
-    OperationSucceeded := MoveFile(SourceMakeExe,TargetMakeExe);
-    if (NOT OperationSucceeded) then
-    begin
-      WritelnLog(etError, localinfotext + 'Could not move ' + SourceMakeExe + ' towards '+TargetMakeExe);
-    end;
-  end;
-
-  SysUtils.Deletefile(SourceName);
-
-  Result := OperationSucceeded;
-end;
-
 
 {$ENDIF}
 
@@ -3932,6 +3832,9 @@ end;
 function TInstaller.GetFile(aURL,aFile:string; forceoverwrite:boolean=false; forcenative:boolean=false):boolean;
 var
   aUseWget:boolean;
+  s, t, r :String;
+  i, j, k :Integer;
+  fIni: TIniFile;
 begin
   localinfotext:=InitInfoText(' (GetFile): ');
   aUseWget:=FUseWget;
@@ -3942,8 +3845,40 @@ begin
     if ((forceoverwrite) AND (SysUtils.FileExists(aFile))) then SysUtils.DeleteFile(aFile);
     Infoln(localinfotext+'Downloading ' + ExtractFileName(aFile));
     Infoln(localinfotext+'Downloading from ' + aURL,etDebug);
-    result:=Download(aUseWget,aURL,aFile,FHTTPProxyHost,FHTTPProxyPort,FHTTPProxyUser,FHTTPProxyPassword);
-    if (NOT result) then Infoln(localinfotext+'Could not download file with URL ' + aURL +' into ' + ExtractFileDir(aFile) + ' (filename: ' + ExtractFileName(aFile) + ')');
+    // 'https://www.visualsvn.com/files/Apache-Subversion-1.12.2.zip'
+    // 'D:\fpcupdeluxe\tmp\FPCUPTMP00000.zip'
+    s := aURL;
+    k := Length(s);
+    for j:=k downto 1 do
+      if s[j]='/' then Break;
+    for i:=9 to k do
+      if s[i]='/' then Break;
+    t := ExtractFilePath(Application.Params[0]);
+    t := t + 'tmp-bak' + t[Length(t)];
+    ForceDirectories(t);
+    if j<k then begin
+      r := t + Copy(s, j+1, k);
+      if FileExists(r) then begin
+        FileUtil.CopyFile(r, aFile);
+        Result := True;
+        Exit;
+      end;
+    end;
+    if i>9 then begin
+      fIni := TIniFile.Create(ChangeFileExt(Application.Params[0], '.pro.ini'));
+      if not fIni.SectionExists('LIST') then begin
+        fIni.WriteBool('BACK','Enabled', True);
+        fIni.WriteString('LIST', 'https://github.com/', 'https://github.proxy.class3.fun/https://github.com/');
+      end;
+      t := Copy(s, 1, i);
+      s := fIni.ReadString('LIST', t, t) + Copy(s, Length(t)+1, 100000);
+    end;
+    //result:=Download(aUseWget,aURL,aFile,FHTTPProxyHost,FHTTPProxyPort,FHTTPProxyUser,FHTTPProxyPassword);
+    result:=Download(aUseWget, s ,aFile,FHTTPProxyHost,FHTTPProxyPort,FHTTPProxyUser,FHTTPProxyPassword);
+    if (NOT result) then begin
+      Infoln(localinfotext+'Could not download file with URL ' + aURL +' into ' + ExtractFileDir(aFile) + ' (filename: ' + ExtractFileName(aFile) + ')');
+    end else if j<k then
+      FileUtil.CopyFile(aFile, r);
   end;
 end;
 

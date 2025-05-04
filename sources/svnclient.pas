@@ -182,7 +182,6 @@ begin
     end
     else
     begin
-      {$IFDEF MSWINDOWS}
       if (CheckExecutable(FRepoExecutable, ['--version'], 'pc-msys', true)) then
       begin
         FRepoExecutable := '';
@@ -193,7 +192,7 @@ begin
         FRepoExecutable := '';
         ThreadLog('SVN client found in path, but its from CYGWIN and that does not work with fpcupdeluxe.',etWarning);
       end;
-      {$ENDIF MSWINDOWS}
+
     end;
   end
   else

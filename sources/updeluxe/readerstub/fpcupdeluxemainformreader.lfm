@@ -1048,7 +1048,7 @@ object Form1: TForm1
           'go32v2'
           'ios'
           'freertos'
-          'wasip1'
+          'wasi'
           'atari'
         )
         OnSelectionChanged = radgrpTargetChanged

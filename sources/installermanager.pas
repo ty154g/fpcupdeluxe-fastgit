@@ -977,6 +977,12 @@ begin
 end;
 
 procedure TFPCupManager.SaveSettings;
+const
+  {$ifdef unix}
+  BatchExt     ='.sh';
+  {$else}
+  BatchExt     ='.bat';
+  {$endif unix}
 var
   CrossCompiling:boolean;
   TxtFile:Text;
@@ -985,7 +991,7 @@ begin
   CrossCompiling:=(CrossCPU_Target<>TCPU.cpuNone) OR (CrossOS_Target<>TOS.osNone);
   s:=SafeGetApplicationPath+'upbuild';
   if CrossCompiling then s:=s+'_'+CrossCombo_Target;
-  s:=s+BATCHEXT;
+  s:=s+BatchExt;
   SysUtils.DeleteFile(s);
   AssignFile(TxtFile,s);
   try
@@ -1717,6 +1723,8 @@ begin
   BinsFileName:='CrossBins'+BinsFileName;
   {$endif MSWINDOWS}
 
+
+
   // Check for the new libs !!
   toolversion:='0';
   ostype:=GetOSCase(CrossOS_Target);
@@ -1817,10 +1825,6 @@ begin
     if (CrossCPU_Target=TCPU.i386) then toolversion:='0600';
     if (CrossCPU_Target=TCPU.x86_64) then toolversion:='0701';
   end;
-  if (CrossCPU_Target=TCPU.wasm32) then
-  begin
-    if (CrossOS_Target=TOS.wasip1) then s:='Wasm32_Wasip1.zip';
-  end;
 
   if (Length(s)>0) then
   begin
@@ -1837,6 +1841,8 @@ begin
   end;
 
   // Check for the new bins !!
+
+
   toolversion:='0';
   ostype:=GetOSCase(CrossOS_Target);
   s:='';
@@ -2088,7 +2094,7 @@ function TSequencer.DoExec(FunctionName: string): boolean;
       CreateDesktopShortCut(SafeGetApplicationPath+ExtractFileName(paramstr(0)),FParent.PersistentOptions,FParent.ShortCutNameFpcup);
       {$ELSE}
       FParent.PersistentOptions:=FParent.PersistentOptions+' $*';
-      CreateHomeStartLink(GetUserDir,'"'+SafeGetApplicationPath+ExtractFileName(paramstr(0))+'"',FParent.PersistentOptions,FParent.ShortCutNameFpcup+BATCHEXT);
+      CreateHomeStartLink('"'+SafeGetApplicationPath+ExtractFileName(paramstr(0))+'"',FParent.PersistentOptions,FParent.ShortCutNameFpcup);
       {$ENDIF MSWINDOWS}
       FParent.FShortcutCreated:=true;
     end;
@@ -2110,15 +2116,14 @@ function TSequencer.DoExec(FunctionName: string): boolean;
         InstalledLazarus:=IncludeTrailingPathDelimiter(FParent.LazarusInstallDirectory)+'lazarus'+GetExeExt;
         {$IFDEF MSWINDOWS}
         CreateDesktopShortCut(InstalledLazarus,'--pcp="'+FParent.LazarusPrimaryConfigPath+'"',FParent.ShortCutNameLazarus);
-        CreateHomeStartLink(FParent.BaseDirectory,'"'+InstalledLazarus+'"','--pcp="'+FParent.LazarusPrimaryConfigPath+'"',FParent.ShortcutNameLazarus+BATCHEXT);
         {$ENDIF MSWINDOWS}
         {$IFDEF UNIX}
         {$IFDEF DARWIN}
-        CreateHomeStartLink(GetUserDir,IncludeLeadingPathDelimiter(InstalledLazarus)+'.app/Contents/MacOS/lazarus','--pcp="'+FParent.LazarusPrimaryConfigPath+'"',FParent.ShortcutNameLazarus+BATCHEXT);
+        CreateHomeStartLink(IncludeLeadingPathDelimiter(InstalledLazarus)+'.app/Contents/MacOS/lazarus','--pcp="'+FParent.LazarusPrimaryConfigPath+'"',FParent.ShortcutNameLazarus);
         {$ELSE}
-        CreateHomeStartLink(GetUserDir,'"'+InstalledLazarus+'"','--pcp="'+FParent.LazarusPrimaryConfigPath+'"',FParent.ShortcutNameLazarus+BATCHEXT);
+        CreateHomeStartLink('"'+InstalledLazarus+'"','--pcp="'+FParent.LazarusPrimaryConfigPath+'"',FParent.ShortcutNameLazarus);
         {$ENDIF DARWIN}
-        // Create a desktop shortcut with the correct settings
+        // Desktop shortcut creation will not always work. As a fallback, create the link in the home directory:
         CreateDesktopShortCut(InstalledLazarus,'--pcp="'+FParent.LazarusPrimaryConfigPath+'"',FParent.ShortCutNameLazarus,FParent.Context);
         {$ENDIF UNIX}
         FParent.FShortcutCreated:=true;

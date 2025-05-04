@@ -141,6 +141,9 @@ type
     property  HTTPProxyPassword: string read FHTTPProxyPassword;
     property  FileNameOnly: string read FFilenameOnly;
     property  Verbose: boolean write SetVerbose;
+  protected
+    FBackFile: String;
+    function  checkFile(var URL:string; aFilename:string):boolean;  // 下载本地提前完成和代理设置
   public
     constructor Create;virtual;
     destructor Destroy;override;
@@ -241,7 +244,7 @@ function MulDiv(const a, b, c : Integer ) : Integer;
 // Create shortcut on desktop to Target file
 procedure CreateDesktopShortCut(const Target, TargetArguments, ShortcutName: string; const AddContext:boolean=false);
 // Create shell script in user directory that links to Target
-procedure CreateHomeStartLink(const Location, {%H-}Target, {%H-}TargetArguments, {%H-}ShortcutName: string);
+procedure CreateHomeStartLink(const {%H-}Target, {%H-}TargetArguments, {%H-}ShortcutName: string);
 {$IFDEF MSWINDOWS}
 // Delete shortcut on desktop
 procedure DeleteDesktopShortcut(const ShortcutName: string);
@@ -271,7 +274,6 @@ function CompilerABI(CompilerPath: string): string;
 function CompilerFPU(CompilerPath: string): string;
 function CompilerCPU(CompilerPath: string): string;
 function CompilerOS(CompilerPath: string): string;
-function CompilerCPUOSTarget(CompilerPath: string): string;
 procedure VersionFromString(const VersionSnippet:string;out Major,Minor,Build:integer; var Patch: Integer);
 function CalculateFullVersion(const Major,Minor,Release:integer):dword;overload;
 function CalculateFullVersion(const Major,Minor,Release,Patch:integer):qword;overload;
@@ -1069,7 +1071,6 @@ begin
     {$else}
     XdgDesktopContent.Add('Exec='+Target+' '+TargetArguments+' %f');
     {$endif}
-    XdgDesktopContent.Add('StartupWMClass=Lazarus');
     XdgDesktopContent.Add('Name='+ShortcutName);
     XdgDesktopContent.Add('GenericName=Lazarus IDE with Free Pascal Compiler');
     XdgDesktopContent.Add('Category=Application;IDE;Development;GUIDesigner;Programming;');
@@ -1191,46 +1192,36 @@ end;
 {$ENDIF DARWIN}
 {$ENDIF MSWINDOWS}
 
-procedure CreateHomeStartLink(const Location, Target, TargetArguments, ShortcutName: string);
+procedure CreateHomeStartLink(const Target, TargetArguments,ShortcutName: string);
+{$IFDEF UNIX}
 var
   ScriptText: TStringList;
   ScriptFile: string;
+{$ENDIF UNIX}
 begin
+  {$IFDEF UNIX}
   //create dir if it doesn't exist
-  ForceDirectoriesSafe(ExtractFilePath(IncludeTrailingPathDelimiter(Location)+ShortcutName));
+  ForceDirectoriesSafe(ExtractFilePath(IncludeTrailingPathDelimiter(GetUserDir)+ShortcutName));
   ScriptText:=TStringList.Create;
   try
     // No quotes here, either, we're not in a shell, apparently...
-    ScriptFile:=IncludeTrailingPathDelimiter(Location)+ShortcutName;
+    ScriptFile:=IncludeTrailingPathDelimiter(GetUserDir)+ShortcutName;
     SysUtils.DeleteFile(ScriptFile); //Get rid of any existing remnants
-
-    {$IFDEF MSWINDOWS}
-    ScriptText.Add('@ECHO OFF');
-    ScriptText.Add('REM #####################################################');
-    ScriptText.Add('REM '+FileNameWithoutExt(UnQuote(Target))+' startup for windows');
-    ScriptText.Add('REM #####################################################');
-    {$ENDIF}
-    {$IFDEF UNIX}
     ScriptText.Add('#!/bin/sh');
-    ScriptText.Add('#####################################################');
-    ScriptText.Add('# '+FileNameWithoutExt(UnQuote(Target))+' startup');
-    ScriptText.Add('#####################################################');
+    ScriptText.Add('# '+BeginSnippet+' home startlink script');
     {$ifdef DISABLE_PPC_CONFIG_PATH}
     ScriptText.Add('unset PPC_CONFIG_PATH');
     {$endif}
-    {$ENDIF}
-
-    ScriptText.Add(Target+' '+TargetArguments{$IFDEF UNIX}+' "$@"'{$ENDIF});
+    ScriptText.Add(Target+' '+TargetArguments+' "$@"');
     try
       ScriptText.SaveToFile(ScriptFile);
-      {$IFDEF UNIX}
       FpChmod(ScriptFile, &755); //rwxr-xr-x
-      {$ENDIF}
     except
     end;
   finally
     ScriptText.Free;
   end;
+  {$ENDIF UNIX}
 end;
 
 function FileNameFromURL(URL:string):string;
@@ -1325,15 +1316,6 @@ end;
 function CompilerOS(CompilerPath: string): string;
 begin
   Result:=CompilerCommand(CompilerPath,'-iSO');
-end;
-
-function CompilerCPUOSTarget(CompilerPath: string): string;
-var
-  i:SizeInt;
-begin
-  result:=Trim(CompilerCommand(CompilerPath,'-iTP -iTO'));
-  i:=Pos(' ',result);
-  if (i>0) then result[i]:='-';
 end;
 
 procedure VersionFromString(const VersionSnippet:string;out Major,Minor,Build:integer; var Patch: Integer);
@@ -4100,7 +4082,7 @@ begin
           end;
         end
         else
-          Result := true; //not all non-0 result codes are errors. There's no way to tell, realy
+          Result := true; //not all non-0 result codes are errors. There's no way to tell, really
       end;
     except
       on E: Exception do
@@ -5292,6 +5274,50 @@ begin
   {$endif}
 end;
 
+function  TBasicDownLoader.checkFile(var URL:string; aFilename:string): boolean;  // 下载本地提前完成和代理设置
+var
+  fIni: TIniFile;
+  strs: TStrings;
+  str,s,t: String;
+  index,k: Integer;
+begin
+  s := ExtractFilePath(Application.Params[0]);
+  t := ExtractFileName(aFilename);
+  s := s + 'tmp-bak' + s[Length(s)];
+  ForceDirectories(s);
+  FBackFile := s + t;
+  if t='' then FBackFile := ''
+  else if FileExists(FBackFile) then begin
+    FileUtil.CopyFile(FBackFile, aFilename);
+    Result := True;
+    Exit;
+  end else Result := False;
+
+  try
+    fIni := TIniFile.Create(ChangeFileExt(Application.Params[0], '.pro.ini'));
+    strs := TStringList.Create;
+    if not fIni.SectionExists('LIST') then begin
+      fIni.WriteBool('BACK','Enabled', True);
+      fIni.WriteString('LIST', 'https://github.com/', 'https://github.proxy.class3.fun/https://github.com/');
+    end;
+    fIni.ReadSection('LIST', strs);
+
+    index:=0;
+    repeat
+      str := strs.Strings[index];
+      k := Length(str);
+      if Copy(URL, 1, k)=str then begin
+        URL := fIni.ReadString('LIST', str, str) + Copy(URL, k+1, 100000);
+        Break;
+      end;
+      Inc(index);
+    until index>strs.Count;
+  finally
+    fIni.Free;
+    strs.Free;
+  end;
+end;
+
 {$ifdef ENABLENATIVE}
 constructor TUseNativeDownLoader.Create;
 begin
@@ -5676,17 +5702,22 @@ end;
 
 function TUseNativeDownLoader.getFile(const URL,aFilename:string):boolean;
 var
+  aURL:String;
   aFile:TDownloadStream;
 begin
-  result:=false;
-  FFileNameOnly:=ExtractFileName(aFilename);
-  aFile:=TDownloadStream.Create(aFilename,fmCreate);
-  try
-    result:=Download(URL,aFile);
-  finally
-    aFile.Destroy;
+  aURL:=URL;
+  result:=False; //checkFile(aURL,aFilename);
+  if not result then begin
+    FFileNameOnly:=ExtractFileName(aFilename);
+    aFile:=TDownloadStream.Create(aFilename,fmCreate);
+    try
+      result:=Download(aURL,aFile);
+    finally
+      aFile.Destroy;
+    end;
   end;
   if (NOT result) then SysUtils.DeleteFile(aFilename);
+  //else if Length(FBackFile)>0 then FileUtil.CopyFile(aFilename, FBackFile);
 end;
 
 function TUseNativeDownLoader.getStream(const URL:string; aDataStream:TStream):boolean;
@@ -6250,21 +6281,26 @@ end;
 
 function TUseWGetDownloader.getFile(const URL,aFilename:string):boolean;
 var
+  aURL:String;
   aFile:TDownloadStream;
 begin
-  result:=false;
-  FFileNameOnly:=ExtractFileName(aFilename);
-  try
-    aFile:=TDownloadStream.Create(aFilename,fmCreate);
+  aURL:=URL;
+  result:=False; //checkFile(aURL,aFilename);
+  if not result then begin
+    FFileNameOnly:=ExtractFileName(aFilename);
     try
-      result:=getStream(URL,aFile);
-    finally
-      aFile.Destroy;
+      aFile:=TDownloadStream.Create(aFilename,fmCreate);
+      try
+        result:=getStream(aURL,aFile);
+      finally
+        aFile.Destroy;
+      end;
+    except
+      result:=False;
     end;
-  except
-    result:=False;
   end;
   if (NOT result) then SysUtils.DeleteFile(aFilename);
+  //else if Length(FBackFile)>0 then FileUtil.CopyFile(aFilename, FBackFile);
 end;
 
 function TUseWGetDownloader.getStream(const URL:string; aDataStream:TStream):boolean;

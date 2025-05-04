@@ -2410,7 +2410,6 @@ begin
     Lazarus 3.2     + FPC 3.2.2
     Lazarus 3.4     + FPC 3.2.2
     Lazarus 3.6     + FPC 3.2.2
-    Lazarus 3.8     + FPC 3.2.2
     end;
   }
 
@@ -2567,7 +2566,7 @@ begin
       begin
         s:='Going to install FPC cross-compiler for Web Assembly.';
         aCPU:=TCPU.wasm32;
-        aOS:=TOS.wasip1;
+        aOS:=TOS.wasi;
       end;
 
       if (Sender=PicoBtn) OR (Sender=WioBtn) OR (Sender=ESPBtn) OR (Sender=UltiboBtn) OR (Sender=AndroidBtn) OR (Sender=WABtn) then
@@ -2889,7 +2888,7 @@ begin
     end;
   end;
 
-  if (FPCupManager.CrossOS_Target=TOS.wasip1) then
+  if (FPCupManager.CrossOS_Target=TOS.wasi) then
   begin
     success:=(FPCupManager.CrossCPU_Target in [TCPU.wasm32]);
     if (NOT success) then
@@ -2911,7 +2910,7 @@ begin
 
   if (FPCupManager.CrossCPU_Target=TCPU.wasm32) then
   begin
-    success:=(FPCupManager.CrossOS_Target in [TOS.wasip1,TOS.embedded]);
+    success:=(FPCupManager.CrossOS_Target in [TOS.wasi,TOS.embedded]);
     if (NOT success) then
     begin
       ShowInfo('No valid OS target for WebAssembly.');

@@ -209,7 +209,6 @@
           <Linking>
             <Debugging>
               <GenerateDebugInfo Value="False"/>
-              <RunWithoutDebug Value="True"/>
               <UseLineInfoUnit Value="False"/>
               <StripSymbols Value="True"/>
             </Debugging>
@@ -1213,8 +1212,6 @@
       <UnitOutputDirectory Value="buildlibs\$NameOnly($(ProjFile))\$NameOnly($Project(InfoFile))\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>
-      <TargetCPU Value="powerpc"/>
-      <TargetOS Value="darwin"/>
       <Optimizations>
         <OptimizationLevel Value="2"/>
       </Optimizations>
